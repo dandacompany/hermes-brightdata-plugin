@@ -1,5 +1,10 @@
 # hermes-brightdata
 
+[![CI](https://github.com/dandacompany/hermes-brightdata-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/dandacompany/hermes-brightdata-plugin/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/hermes-brightdata.svg)](https://pypi.org/project/hermes-brightdata/)
+[![Python](https://img.shields.io/pypi/pyversions/hermes-brightdata.svg)](https://pypi.org/project/hermes-brightdata/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Bright Data web data tools for Hermes Agent — search, scrape, structured datasets, and browser automation.
 
 ## Overview

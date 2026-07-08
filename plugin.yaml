@@ -1,0 +1,28 @@
+name: brightdata
+version: 0.1.0
+description: Bright Data web data tools — search, scrape, structured datasets, and browser automation.
+author: Dante Labs
+provides_tools:
+  - search_engine
+  - scrape
+  - scrape_batch
+  - web_data
+  - session_stats
+  - browser_navigate
+  - browser_snapshot
+  - browser_act
+  - browser_get
+provides_hooks:
+  - on_session_end
+requires_env:
+  - name: BRIGHTDATA_API_TOKEN
+    secret: true
+    description: Bright Data API token (Account settings → API keys).
+optional_env:
+  - name: BRIGHTDATA_WEB_UNLOCKER_ZONE
+    description: Web Unlocker zone name (default web_unlocker1).
+  - name: BRIGHTDATA_SERP_ZONE
+    description: SERP API zone name (default serp_api1).
+  - name: BRIGHTDATA_BROWSER_AUTH
+    secret: true
+    description: "Scraping Browser auth: brd-customer-<id>-zone-<zone>:<password>."

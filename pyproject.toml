@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-brightdata"
+version = "0.1.0"
+description = "Bright Data web data tools for Hermes Agent — search, scrape, structured datasets, and browser automation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["hermes", "bright-data", "brightdata", "web-scraping", "plugin", "agent"]
+dependencies = ["requests>=2.31"]
+
+[project.optional-dependencies]
+browser = ["playwright>=1.40"]
+dev = ["pytest>=8", "responses>=0.25", "pyyaml>=6"]
+
+[project.urls]
+Homepage = "https://github.com/dandacompany/hermes-brightdata-plugin"
+Repository = "https://github.com/dandacompany/hermes-brightdata-plugin"
+
+[project.entry-points."hermes_agent.plugins"]
+brightdata = "brightdata_plugin"
+
+[tool.setuptools.packages.find]
+include = ["brightdata_plugin*"]

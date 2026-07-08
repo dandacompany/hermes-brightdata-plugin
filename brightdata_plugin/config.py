@@ -14,6 +14,9 @@ class Config:
     unlocker_zone: str
     serp_zone: str
     browser_auth: str | None
+    proxy_auth: str | None = None
+    proxy_ca: str | None = None
+    proxy_host: str = "brd.superproxy.io:33335"
 
 
 def load_config(env: dict | None = None) -> Config:
@@ -32,4 +35,7 @@ def load_config(env: dict | None = None) -> Config:
         unlocker_zone=unlocker_zone,
         serp_zone=env.get("BRIGHTDATA_SERP_ZONE", "serp_api1"),
         browser_auth=env.get("BRIGHTDATA_BROWSER_AUTH"),
+        proxy_auth=env.get("BRIGHTDATA_PROXY_AUTH"),
+        proxy_ca=env.get("BRIGHTDATA_PROXY_CA"),
+        proxy_host=env.get("BRIGHTDATA_PROXY_HOST", "brd.superproxy.io:33335"),
     )

@@ -72,6 +72,24 @@ TOOL_SCHEMAS: dict[str, dict] = {
             "required": ["platform", "url"],
         },
     },
+    "proxy_scrape": {
+        "name": "proxy_scrape",
+        "description": (
+            "Fetch a URL through a Bright Data residential proxy, optionally from a "
+            "specific country. Use for geo-targeted content (region-specific pricing, "
+            "localized pages). Returns the raw response. Requires BRIGHTDATA_PROXY_AUTH; "
+            "for HTTPS, set BRIGHTDATA_PROXY_CA to the Bright Data proxy CA cert path."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "Absolute URL to fetch."},
+                "country": {"type": "string",
+                            "description": "2-letter ISO country code (e.g. 'us', 'gb'). Optional."},
+            },
+            "required": ["url"],
+        },
+    },
     "session_stats": {
         "name": "session_stats",
         "description": "Report Bright Data tool call counts for this session.",

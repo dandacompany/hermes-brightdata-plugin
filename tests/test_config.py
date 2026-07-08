@@ -58,3 +58,22 @@ def test_load_config_prefixed_unlocker_zone_wins():
         "WEB_UNLOCKER_ZONE": "unprefixed",
     })
     assert cfg.unlocker_zone == "prefixed"
+
+
+def test_load_config_proxy_fields():
+    cfg = config.load_config({
+        "BRIGHTDATA_API_TOKEN": "tok_123",
+        "BRIGHTDATA_PROXY_AUTH": "brd-customer-x-zone-res:pw",
+        "BRIGHTDATA_PROXY_CA": "/path/to/ca.crt",
+        "BRIGHTDATA_PROXY_HOST": "brd.superproxy.io:33335",
+    })
+    assert cfg.proxy_auth == "brd-customer-x-zone-res:pw"
+    assert cfg.proxy_ca == "/path/to/ca.crt"
+    assert cfg.proxy_host == "brd.superproxy.io:33335"
+
+
+def test_load_config_proxy_defaults():
+    cfg = config.load_config({"BRIGHTDATA_API_TOKEN": "tok_123"})
+    assert cfg.proxy_auth is None
+    assert cfg.proxy_ca is None
+    assert cfg.proxy_host == "brd.superproxy.io:33335"

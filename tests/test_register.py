@@ -21,11 +21,11 @@ class FakeCtx:
         self.hooks.setdefault(event, []).append(fn)
 
 
-def test_register_wires_nine_tools(monkeypatch):
+def test_register_wires_all_tools(monkeypatch):
     monkeypatch.setenv("BRIGHTDATA_API_TOKEN", "t")
     ctx = FakeCtx()
     brightdata_plugin.register(ctx)
-    assert len(ctx.tools) == 9
+    assert len(ctx.tools) == 10
     assert "scrape" in ctx.tools
     assert "browser_navigate" in ctx.tools
 
@@ -38,10 +38,10 @@ def test_register_adds_command_and_hook(monkeypatch):
     assert "on_session_end" in ctx.hooks
 
 
-def test_build_handlers_returns_nine():
+def test_build_handlers_returns_all_tools():
     handlers = brightdata_plugin.build_handlers(CFG)
     real_tools = {k: v for k, v in handlers.items() if not k.startswith("_")}
-    assert len(real_tools) == 9
+    assert len(real_tools) == 10
     assert {"_counter", "_get_session", "_session_holder"} <= handlers.keys()
 
 

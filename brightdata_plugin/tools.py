@@ -103,6 +103,20 @@ def make_core_handlers(get_client, counter) -> dict:
         except Exception as e:  # noqa: BLE001
             return _err(f"unexpected error: {e}")
 
+    def proxy_scrape(args: dict, **kwargs) -> str:
+        try:
+            url = args.get("url")
+            if not url:
+                return _err("'url' is required")
+            country = args.get("country")
+            content = get_client().proxy_scrape(url, country=country)
+            counter.record("proxy_scrape")
+            return _ok({"url": url, "country": country, "content": content})
+        except BrightDataError as e:
+            return _err(str(e), e.hint)
+        except Exception as e:  # noqa: BLE001
+            return _err(f"unexpected error: {e}")
+
     def session_stats(args: dict, **kwargs) -> str:
         try:
             return _ok(counter.stats())
@@ -114,6 +128,7 @@ def make_core_handlers(get_client, counter) -> dict:
         "scrape": scrape,
         "scrape_batch": scrape_batch,
         "web_data": web_data,
+        "proxy_scrape": proxy_scrape,
         "session_stats": session_stats,
     }
 

@@ -1,10 +1,37 @@
 from __future__ import annotations
 
+import ssl
 import time
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.poolmanager import PoolManager
 
 from .config import Config
+
+
+class _ProxyCAAdapter(HTTPAdapter):
+    """Trusts a CA file but relaxes OpenSSL 3 strict checks — Bright Data's
+    proxy CA cert lacks an Authority Key Identifier, which strict verification
+    rejects. The chain is still validated against the provided CA."""
+
+    def __init__(self, cafile: str, **kwargs):
+        self._cafile = cafile
+        super().__init__(**kwargs)
+
+    def _build_ctx(self) -> ssl.SSLContext:
+        ctx = ssl.create_default_context(cafile=self._cafile)
+        ctx.verify_flags &= ~ssl.VERIFY_X509_STRICT
+        return ctx
+
+    def init_poolmanager(self, connections, maxsize, block=False, **kwargs):
+        self.poolmanager = PoolManager(
+            num_pools=connections, maxsize=maxsize, block=block,
+            ssl_context=self._build_ctx(), **kwargs)
+
+    def proxy_manager_for(self, *args, **kwargs):
+        kwargs["ssl_context"] = self._build_ctx()
+        return super().proxy_manager_for(*args, **kwargs)
 
 BASE_URL = "https://api.brightdata.com"
 REQUEST_ENDPOINT = f"{BASE_URL}/request"
@@ -63,6 +90,41 @@ class BrightDataClient:
             url = f"{url}{sep}brd_json=1"
         payload = {"zone": self._cfg.serp_zone, "url": url, "format": "raw"}
         return self._post_request(payload).text
+
+    def _proxy_url(self, country: str | None = None) -> str:
+        # proxy_auth is 'brd-customer-<id>-zone-<zone>:<password>'; country targeting
+        # inserts '-country-<cc>' into the username before the password.
+        user, _, password = self._cfg.proxy_auth.partition(":")
+        if country:
+            user = f"{user}-country-{country.lower()}"
+        return f"http://{user}:{password}@{self._cfg.proxy_host}"
+
+    def proxy_scrape(self, url: str, country: str | None = None) -> str:
+        if not self._cfg.proxy_auth:
+            raise BrightDataError(
+                "proxy auth not configured", status=0,
+                hint="set BRIGHTDATA_PROXY_AUTH to "
+                     "'brd-customer-<id>-zone-<residential-zone>:<password>'",
+            )
+        proxy_url = self._proxy_url(country)
+        proxies = {"http": proxy_url, "https": proxy_url}
+        try:
+            if self._cfg.proxy_ca:
+                sess = requests.Session()
+                sess.mount("https://", _ProxyCAAdapter(self._cfg.proxy_ca))
+                sess.proxies = proxies
+                resp = sess.get(url, timeout=self._timeout)
+            else:
+                resp = requests.get(url, proxies=proxies, timeout=self._timeout)
+        except requests.RequestException as e:
+            raise BrightDataError(
+                "proxy request failed", status=0,
+                hint="check BRIGHTDATA_PROXY_AUTH / BRIGHTDATA_PROXY_CA / network",
+            ) from e
+        if resp.status_code >= 400:
+            raise BrightDataError(
+                f"proxy scrape failed: {resp.status_code}", status=resp.status_code)
+        return resp.text
 
     def trigger_dataset(self, dataset_id: str, urls: list[str]) -> str:
         body = [{"url": u} for u in urls]

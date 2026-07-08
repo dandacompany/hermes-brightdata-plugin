@@ -1,12 +1,13 @@
 name: brightdata
-version: 0.1.0
-description: Bright Data web data tools — search, scrape, structured datasets, and browser automation.
+version: 0.2.0
+description: Bright Data web data tools — search, scrape, structured datasets, residential proxy, and browser automation.
 author: Dante Labs
 provides_tools:
   - search_engine
   - scrape
   - scrape_batch
   - web_data
+  - proxy_scrape
   - session_stats
   - browser_navigate
   - browser_snapshot
@@ -26,3 +27,10 @@ optional_env:
   - name: BRIGHTDATA_BROWSER_AUTH
     secret: true
     description: "Scraping Browser auth: brd-customer-<id>-zone-<zone>:<password>."
+  - name: BRIGHTDATA_PROXY_AUTH
+    secret: true
+    description: "Residential proxy auth: brd-customer-<id>-zone-<residential-zone>:<password>."
+  - name: BRIGHTDATA_PROXY_CA
+    description: Path to the Bright Data proxy CA cert (for HTTPS via proxy, port 33335).
+  - name: BRIGHTDATA_PROXY_HOST
+    description: Proxy host:port (default brd.superproxy.io:33335).

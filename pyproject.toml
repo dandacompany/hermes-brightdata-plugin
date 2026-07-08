@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hermes-brightdata"
-version = "0.1.0"
-description = "Bright Data web data tools for Hermes Agent — search, scrape, structured datasets, and browser automation"
+version = "0.2.0"
+description = "Bright Data web data tools for Hermes Agent — search, scrape, structured datasets, residential proxy, and browser automation"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

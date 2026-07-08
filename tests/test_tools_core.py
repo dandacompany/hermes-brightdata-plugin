@@ -135,3 +135,19 @@ def test_failed_scrape_not_counted():
     assert "error" in json.loads(out)
     stats = json.loads(handlers["session_stats"]({}))
     assert stats["by_tool"].get("scrape", 0) == 0
+
+
+def test_proxy_scrape_missing_url(wired):
+    handlers, _, _ = wired
+    out = json.loads(handlers["proxy_scrape"]({}))
+    assert "error" in out
+
+
+def test_proxy_scrape_returns_content_and_counts(wired):
+    handlers, client, counter = wired
+    # extend FakeClient dynamically with a proxy_scrape method
+    client.proxy_scrape = lambda url, country=None: f"PROXY:{country}:{url}"
+    out = json.loads(handlers["proxy_scrape"]({"url": "https://e.com", "country": "us"}))
+    assert out["content"] == "PROXY:us:https://e.com"
+    assert out["country"] == "us"
+    assert counter.stats()["by_tool"]["proxy_scrape"] == 1

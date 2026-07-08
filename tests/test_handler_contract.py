@@ -4,7 +4,8 @@ import brightdata_plugin
 from brightdata_plugin.config import Config
 
 CFG = Config(token="t", unlocker_zone="u", serp_zone="s", browser_auth=None)
-ALL = ["search_engine", "scrape", "scrape_batch", "web_data", "session_stats",
+ALL = ["search_engine", "scrape", "scrape_batch", "web_data", "proxy_scrape",
+       "session_stats",
        "browser_navigate", "browser_snapshot", "browser_act", "browser_get"]
 
 

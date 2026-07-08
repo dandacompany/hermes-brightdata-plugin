@@ -24,3 +24,11 @@ def test_platforms_sorted_nonempty():
     p = datasets.platforms()
     assert p == sorted(p)
     assert len(p) >= 3
+
+
+def test_expanded_platforms_registered():
+    # v0.2.0 expansion — a sample of the verified collect-by-url dataset_ids
+    assert datasets.resolve("linkedin_company") == "gd_l1vikfnt1wgvvqz95w"
+    assert datasets.resolve("tiktok_posts") == "gd_lu702nij2f790tmv9h"
+    assert datasets.resolve("x_posts") == "gd_lwxkxvnf1cynvib9co"
+    assert len(datasets.platforms()) >= 20

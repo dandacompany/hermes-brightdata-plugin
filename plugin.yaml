@@ -1,5 +1,5 @@
 name: brightdata
-version: 0.2.0
+version: 0.2.1
 description: Bright Data web data tools — search, scrape, structured datasets, residential proxy, and browser automation.
 author: Dante Labs
 provides_tools:

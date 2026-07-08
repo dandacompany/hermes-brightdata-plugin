@@ -117,7 +117,7 @@ Verify it's loaded:
 hermes plugins list
 ```
 
-You should see `brightdata` listed with version `0.2.0`.
+You should see `brightdata` listed with version `0.2.1`.
 
 ## Pricing
 

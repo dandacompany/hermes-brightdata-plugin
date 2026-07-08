@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import re
 import ssl
 import time
+from urllib.parse import quote
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -96,8 +98,16 @@ class BrightDataClient:
         # inserts '-country-<cc>' into the username before the password.
         user, _, password = self._cfg.proxy_auth.partition(":")
         if country:
+            # country is LLM-supplied — reject anything but a 2-letter ISO code so it
+            # cannot inject '@'/':'/'/' and break out of the userinfo section.
+            if not re.fullmatch(r"[A-Za-z]{2}", country):
+                raise BrightDataError(
+                    "invalid country code", status=0,
+                    hint="country must be a 2-letter ISO code (e.g. 'us')")
             user = f"{user}-country-{country.lower()}"
-        return f"http://{user}:{password}@{self._cfg.proxy_host}"
+        # URL-encode userinfo as defense-in-depth against stray reserved characters.
+        return (f"http://{quote(user, safe='')}:{quote(password, safe='')}"
+                f"@{self._cfg.proxy_host}")
 
     def proxy_scrape(self, url: str, country: str | None = None) -> str:
         if not self._cfg.proxy_auth:

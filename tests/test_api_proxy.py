@@ -45,3 +45,19 @@ def test_proxy_scrape_http_error_raises():
     with pytest.raises(BrightDataError) as exc:
         client.proxy_scrape("https://example.com")
     assert exc.value.status == 403
+
+
+@pytest.mark.parametrize("bad", ["us@evil.com", "u", "usa", "us:pw@host", "u/x", ""])
+def test_proxy_url_rejects_non_iso_country(bad):
+    client = BrightDataClient(PROXY_CFG)
+    if bad == "":
+        # empty string is falsy -> treated as no country, builds base URL
+        assert client._proxy_url(bad).endswith("@brd.superproxy.io:33335")
+    else:
+        with pytest.raises(BrightDataError):
+            client._proxy_url(bad)
+
+
+def test_proxy_url_country_case_insensitive():
+    client = BrightDataClient(PROXY_CFG)
+    assert client._proxy_url("US") == client._proxy_url("us")

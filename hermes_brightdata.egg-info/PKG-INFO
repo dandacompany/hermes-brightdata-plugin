@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: hermes-brightdata
-Version: 0.2.0
+Version: 0.2.1
 Summary: Bright Data web data tools for Hermes Agent — search, scrape, structured datasets, residential proxy, and browser automation
 License: MIT
 Project-URL: Homepage, https://github.com/dandacompany/hermes-brightdata-plugin
@@ -137,7 +137,7 @@ Verify it's loaded:
 hermes plugins list
 ```
 
-You should see `brightdata` listed with version `0.2.0`.
+You should see `brightdata` listed with version `0.2.1`.
 
 ## Pricing
 

@@ -26,14 +26,15 @@ def _default_connector(cfg: Config):
                 "playwright not installed",
                 "install with: pip install hermes-brightdata[browser]") from e
         pw = sync_playwright().start()
+        browser_obj = None
         try:
             browser_obj = pw.chromium.connect_over_cdp(cdp_url)
             page = browser_obj.new_page()
         except BrowserUnavailable:
-            pw.stop()
+            _close_after_failed_start(browser_obj, pw)
             raise
         except Exception:
-            pw.stop()
+            _close_after_failed_start(browser_obj, pw)
             # never surface the raw exception: it can embed the CDP URL,
             # which contains the browser_auth password.
             raise BrowserUnavailable(
@@ -44,6 +45,19 @@ def _default_connector(cfg: Config):
         page._bd_browser = browser_obj
         return page
     return connect
+
+
+def _close_after_failed_start(browser_obj, pw) -> None:
+    """Release a partly created CDP browser before stopping Playwright."""
+    if browser_obj is not None:
+        try:
+            browser_obj.close()
+        except Exception:  # noqa: BLE001 — best-effort cleanup after a failed start
+            pass
+    try:
+        pw.stop()
+    except Exception:  # noqa: BLE001 — preserve the original connection failure
+        pass
 
 
 class BrowserSession:

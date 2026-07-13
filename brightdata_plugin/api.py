@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import ssl
 import time
@@ -47,6 +48,12 @@ _HINTS = {
     429: "Rate limited or quota exhausted — retry later or raise plan limit.",
 }
 
+_NETWORK_HINT = (
+    "check network connectivity and retry; verify the Bright Data endpoint is reachable."
+)
+_JSON_HINT = "Bright Data returned invalid JSON; retry and contact support if it persists."
+_RESPONSE_HINT = "Bright Data returned an incomplete response; retry and contact support if it persists."
+
 
 class BrightDataError(Exception):
     def __init__(self, message: str, status: int, hint: str = ""):
@@ -65,14 +72,44 @@ class BrightDataClient:
             "Content-Type": "application/json",
         })
 
-    def _post_request(self, payload: dict) -> requests.Response:
-        resp = self._session.post(REQUEST_ENDPOINT, json=payload, timeout=self._timeout)
+    def _request(self, method: str, url: str, operation: str, **kwargs) -> requests.Response:
+        """Make an API request and expose operational failures uniformly."""
+        try:
+            resp = self._session.request(method, url, timeout=self._timeout, **kwargs)
+        except requests.RequestException as e:
+            raise BrightDataError(
+                f"Bright Data {operation} request failed", status=0, hint=_NETWORK_HINT,
+            ) from e
         if resp.status_code >= 400:
             raise BrightDataError(
-                f"Bright Data /request failed: {resp.status_code}",
+                f"Bright Data {operation} failed: {resp.status_code}",
                 status=resp.status_code,
             )
         return resp
+
+    @staticmethod
+    def _json_response(resp: requests.Response, operation: str,
+                       required_field: str | None = None) -> dict:
+        try:
+            payload = resp.json()
+        except (ValueError, json.JSONDecodeError) as e:
+            raise BrightDataError(
+                f"Bright Data {operation} returned invalid JSON", status=0, hint=_JSON_HINT,
+            ) from e
+        if not isinstance(payload, dict):
+            raise BrightDataError(
+                f"Bright Data {operation} returned an unexpected response", status=0,
+                hint=_RESPONSE_HINT,
+            )
+        if required_field and not payload.get(required_field):
+            raise BrightDataError(
+                f"Bright Data {operation} response is missing '{required_field}'", status=0,
+                hint=_RESPONSE_HINT,
+            )
+        return payload
+
+    def _post_request(self, payload: dict) -> requests.Response:
+        return self._request("POST", REQUEST_ENDPOINT, "/request", json=payload)
 
     def unlock(self, url: str, data_format: str = "markdown", render: bool = False) -> str:
         payload = {
@@ -138,32 +175,20 @@ class BrightDataClient:
 
     def trigger_dataset(self, dataset_id: str, urls: list[str]) -> str:
         body = [{"url": u} for u in urls]
-        resp = self._session.post(
-            DATASET_TRIGGER, params={"dataset_id": dataset_id},
-            json=body, timeout=self._timeout,
+        resp = self._request(
+            "POST", DATASET_TRIGGER, "dataset trigger", params={"dataset_id": dataset_id}, json=body,
         )
-        if resp.status_code >= 400:
-            raise BrightDataError(
-                f"trigger failed: {resp.status_code}", status=resp.status_code)
-        return resp.json()["snapshot_id"]
+        return self._json_response(resp, "dataset trigger", "snapshot_id")["snapshot_id"]
 
     def poll_snapshot(self, snapshot_id: str) -> str:
-        resp = self._session.get(
-            f"{DATASET_PROGRESS}/{snapshot_id}", timeout=self._timeout)
-        if resp.status_code >= 400:
-            raise BrightDataError(
-                f"progress failed: {resp.status_code}", status=resp.status_code)
-        return resp.json()["status"]
+        resp = self._request("GET", f"{DATASET_PROGRESS}/{snapshot_id}", "dataset progress")
+        return self._json_response(resp, "dataset progress", "status")["status"]
 
     def download_snapshot(self, snapshot_id: str, fmt: str = "json") -> str:
-        resp = self._session.get(
-            f"{DATASET_SNAPSHOT}/{snapshot_id}", params={"format": fmt},
-            timeout=self._timeout,
-        )
-        if resp.status_code >= 400:
-            raise BrightDataError(
-                f"snapshot failed: {resp.status_code}", status=resp.status_code)
-        return resp.text
+        return self._request(
+            "GET", f"{DATASET_SNAPSHOT}/{snapshot_id}", "dataset snapshot",
+            params={"format": fmt},
+        ).text
 
     def collect_dataset(self, dataset_id: str, urls: list[str],
                         poll_interval: float = 2.0, max_wait: float = 60.0,

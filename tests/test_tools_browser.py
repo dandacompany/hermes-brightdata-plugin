@@ -31,19 +31,19 @@ def wired():
 
 def test_browser_navigate(wired):
     handlers, _ = wired
-    out = handlers["browser_navigate"]({"url": "https://example.com"})
+    out = handlers["brightdata_browser_navigate"]({"url": "https://example.com"})
     assert json.loads(out)["url"] == "https://example.com"
 
 
 def test_browser_navigate_missing_url(wired):
     handlers, _ = wired
-    out = handlers["browser_navigate"]({})
+    out = handlers["brightdata_browser_navigate"]({})
     assert "error" in json.loads(out)
 
 
 def test_browser_act_value_error_becomes_error_json(wired):
     handlers, _ = wired
-    out = handlers["browser_act"]({"action": "type", "ref": "i1"})
+    out = handlers["brightdata_browser_act"]({"action": "type", "ref": "i1"})
     assert "error" in json.loads(out)
 
 
@@ -51,7 +51,7 @@ def test_browser_unavailable_returns_hint():
     def raiser():
         raise BrowserUnavailable("no playwright", "pip install hermes-brightdata[browser]")
     handlers = tools.make_browser_handlers(raiser, SessionCounter())
-    out = handlers["browser_navigate"]({"url": "https://example.com"})
+    out = handlers["brightdata_browser_navigate"]({"url": "https://example.com"})
     data = json.loads(out)
     assert "error" in data
     assert "playwright" in data["hint"]
@@ -59,13 +59,13 @@ def test_browser_unavailable_returns_hint():
 
 def test_browser_get_records_counter(wired):
     handlers, counter = wired
-    handlers["browser_get"]({"kind": "text"})
-    assert counter.stats()["by_tool"]["browser_get"] == 1
+    handlers["brightdata_browser_get"]({"kind": "text"})
+    assert counter.stats()["by_tool"]["brightdata_browser_get"] == 1
 
 
 def test_browser_act_failure_not_counted(wired):
     handlers, counter = wired
-    out = handlers["browser_act"]({"action": "type", "ref": "i1"})
+    out = handlers["brightdata_browser_act"]({"action": "type", "ref": "i1"})
     assert "error" in json.loads(out)
     # a failed browser action must not be counted as a successful call
-    assert counter.stats()["by_tool"].get("browser_act", 0) == 0
+    assert counter.stats()["by_tool"].get("brightdata_browser_act", 0) == 0

@@ -3,7 +3,8 @@ from brightdata_plugin import schemas
 EXPECTED = {
     "search_engine", "scrape", "scrape_batch", "web_data", "proxy_scrape",
     "session_stats",
-    "browser_navigate", "browser_snapshot", "browser_act", "browser_get",
+    "brightdata_browser_navigate", "brightdata_browser_snapshot",
+    "brightdata_browser_act", "brightdata_browser_get",
 }
 
 

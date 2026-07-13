@@ -17,6 +17,27 @@ SEARCH_ENGINE_URLS = {
 }
 
 
+def normalize_json_strings(value):
+    """Decode JSON objects/arrays embedded as response strings recursively.
+
+    Bright Data can return an already-JSON payload wrapped one or more times as
+    a string.  Keep ordinary text untouched so callers never lose page content.
+    """
+    if isinstance(value, str):
+        candidate = value.strip()
+        if candidate[:1] in ("{", "["):
+            try:
+                return normalize_json_strings(json.loads(candidate))
+            except json.JSONDecodeError:
+                pass
+        return value
+    if isinstance(value, list):
+        return [normalize_json_strings(item) for item in value]
+    if isinstance(value, dict):
+        return {key: normalize_json_strings(item) for key, item in value.items()}
+    return value
+
+
 def _err(message: str, hint: str = "") -> str:
     payload = {"error": message}
     if hint:
@@ -40,7 +61,7 @@ def make_core_handlers(get_client, counter) -> dict:
                 return _err(f"unknown engine '{engine}'",
                             f"choose one of {sorted(SEARCH_ENGINE_URLS)}")
             url = template.format(q=quote_plus(query))
-            results = get_client().serp(url)
+            results = normalize_json_strings(get_client().serp(url))
             counter.record("search_engine")
             return _ok({"engine": engine, "results": results})
         except BrightDataError as e:
@@ -95,7 +116,7 @@ def make_core_handlers(get_client, counter) -> dict:
                 dataset_id = datasets.resolve(platform)
             except datasets.UnknownPlatform as e:
                 return _err(str(e), f"available: {e.available}")
-            result = get_client().collect_dataset(dataset_id, [url])
+            result = normalize_json_strings(get_client().collect_dataset(dataset_id, [url]))
             counter.record("web_data")
             return _ok(result)
         except BrightDataError as e:
@@ -176,8 +197,8 @@ def make_browser_handlers(get_session, counter) -> dict:
         return session.get(kind)
 
     return {
-        "browser_navigate": _run("browser_navigate", _navigate),
-        "browser_snapshot": _run("browser_snapshot", _snapshot),
-        "browser_act": _run("browser_act", _act),
-        "browser_get": _run("browser_get", _get),
+        "brightdata_browser_navigate": _run("brightdata_browser_navigate", _navigate),
+        "brightdata_browser_snapshot": _run("brightdata_browser_snapshot", _snapshot),
+        "brightdata_browser_act": _run("brightdata_browser_act", _act),
+        "brightdata_browser_get": _run("brightdata_browser_get", _get),
     }

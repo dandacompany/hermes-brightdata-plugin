@@ -1,4 +1,5 @@
 import pytest
+import requests
 import responses
 from brightdata_plugin.api import BrightDataClient, BrightDataError
 from brightdata_plugin.config import Config
@@ -55,3 +56,16 @@ def test_unlock_429_hint_mentions_quota():
         client.unlock("https://example.com")
     assert exc.value.status == 429
     assert "quota" in exc.value.hint.lower() or "rate" in exc.value.hint.lower()
+
+
+def test_unlock_network_error_is_brightdata_error(monkeypatch):
+    client = BrightDataClient(CFG)
+
+    def timeout(*args, **kwargs):
+        raise requests.Timeout("network timed out")
+
+    monkeypatch.setattr(client._session, "request", timeout)
+    with pytest.raises(BrightDataError) as exc:
+        client.unlock("https://example.com")
+    assert exc.value.status == 0
+    assert "network" in exc.value.hint.lower()

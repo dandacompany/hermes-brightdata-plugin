@@ -30,6 +30,19 @@ def test_load_config_missing_token_raises():
         config.load_config({})
 
 
+def test_load_config_accepts_one_secret_manager_labelled_token():
+    cfg = config.load_config({"BRIGHTDATA_TEAM_TOKEN": "tok_123"})
+    assert cfg.token == "tok_123"
+
+
+def test_load_config_rejects_ambiguous_labelled_tokens():
+    with pytest.raises(config.ConfigError):
+        config.load_config({
+            "BRIGHTDATA_TEAM_TOKEN": "tok_123",
+            "BRIGHTDATA_STAGING_TOKEN": "tok_456",
+        })
+
+
 def test_load_config_accepts_api_key_alias():
     cfg = config.load_config({"BRIGHTDATA_API_KEY": "key_456"})
     assert cfg.token == "key_456"

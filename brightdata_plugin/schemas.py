@@ -95,8 +95,8 @@ TOOL_SCHEMAS: dict[str, dict] = {
         "description": "Report Bright Data tool call counts for this session.",
         "parameters": {"type": "object", "properties": {}},
     },
-    "browser_navigate": {
-        "name": "browser_navigate",
+    "brightdata_browser_navigate": {
+        "name": "brightdata_browser_navigate",
         "description": (
             "Open a URL in a Bright Data Scraping Browser (real browser with a "
             "persistent session). Use for interactive flows requiring clicks/typing. "
@@ -108,17 +108,17 @@ TOOL_SCHEMAS: dict[str, dict] = {
             "required": ["url"],
         },
     },
-    "browser_snapshot": {
-        "name": "browser_snapshot",
+    "brightdata_browser_snapshot": {
+        "name": "brightdata_browser_snapshot",
         "description": (
             "Return an ARIA snapshot (accessibility tree) of the current browser page "
             "for reading its structure and content. Use CSS/text selectors with "
-            "browser_act to interact."
+            "brightdata_browser_act to interact."
         ),
         "parameters": {"type": "object", "properties": {}},
     },
-    "browser_act": {
-        "name": "browser_act",
+    "brightdata_browser_act": {
+        "name": "brightdata_browser_act",
         "description": (
             "Perform an action on the current browser page: click, type, scroll, or "
             "wait. Target click/type with a CSS or text selector (e.g. 'text=Login')."
@@ -135,8 +135,8 @@ TOOL_SCHEMAS: dict[str, dict] = {
             "required": ["action"],
         },
     },
-    "browser_get": {
-        "name": "browser_get",
+    "brightdata_browser_get": {
+        "name": "brightdata_browser_get",
         "description": (
             "Read the current browser page: html, text, or a base64 screenshot."
         ),

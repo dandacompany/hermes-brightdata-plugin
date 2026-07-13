@@ -51,6 +51,13 @@ def test_search_engine_builds_google_url(wired):
     assert "q=pizza" in client.calls[0][1]
 
 
+def test_search_engine_normalizes_nested_json_strings(wired):
+    handlers, client, _ = wired
+    client.serp = lambda *args, **kwargs: '{"organic": "[{\\"title\\": \\"Example\\"}]"}'
+    data = json.loads(handlers["search_engine"]({"query": "pizza"}))
+    assert data["results"]["organic"] == [{"title": "Example"}]
+
+
 def test_search_engine_unknown_engine_error(wired):
     handlers, _, _ = wired
     out = handlers["search_engine"]({"query": "x", "engine": "askjeeves"})
@@ -79,6 +86,15 @@ def test_web_data_known_platform(wired):
     data = json.loads(out)
     assert data["status"] == "ready"
     assert client.calls[0][1] == "gd_l7q7dkf244hwjntr0"
+
+
+def test_web_data_normalizes_nested_json_strings(wired):
+    handlers, client, _ = wired
+    client.collect_dataset = lambda *args, **kwargs: {
+        "status": "ready", "data": '[{"title": "Example"}]',
+    }
+    data = json.loads(handlers["web_data"]({"platform": "amazon_product", "url": "https://amazon.com/dp/x"}))
+    assert data["data"] == [{"title": "Example"}]
 
 
 def test_web_data_unknown_platform_lists_available(wired):

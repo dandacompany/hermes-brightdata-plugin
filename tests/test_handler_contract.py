@@ -6,7 +6,8 @@ from brightdata_plugin.config import Config
 CFG = Config(token="t", unlocker_zone="u", serp_zone="s", browser_auth=None)
 ALL = ["search_engine", "scrape", "scrape_batch", "web_data", "proxy_scrape",
        "session_stats",
-       "browser_navigate", "browser_snapshot", "browser_act", "browser_get"]
+       "brightdata_browser_navigate", "brightdata_browser_snapshot",
+       "brightdata_browser_act", "brightdata_browser_get"]
 
 
 @pytest.fixture

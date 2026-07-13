@@ -24,7 +24,7 @@ Bright Data가 웹 데이터 수집의 어려운 부분(프록시 로테이션, 
 
 - Python 3.10+
 - Bright Data 계정 및 API 토큰(`BRIGHTDATA_API_TOKEN`)
-- `browser_*` 툴: `[browser]` extra(Playwright) + `BRIGHTDATA_BROWSER_AUTH`. 코어 5종은 `requests`만으로 동작.
+- `brightdata_browser_*` 툴: `[browser]` extra(Playwright) + `BRIGHTDATA_BROWSER_AUTH`. 코어 5종은 `requests`만으로 동작.
 
 ## 설치
 
@@ -70,22 +70,27 @@ hermes plugins enable brightdata
 
 모든 툴은 JSON 문자열을 반환하며, 실패는 예외 대신 `{"error": ..., "hint": ...}`로 돌아온다.
 
+`register_web_search_provider`를 제공하는 Hermes 릴리스에서는 플러그인이 네이티브
+`web_search` 백엔드용 `brightdata` provider도 등록한다. 플러그인을 활성화한 뒤
+`web.search_backend: brightdata`(또는 공용 `web.backend: brightdata`)로 설정한다.
+이전 Hermes에서는 내장 도구를 덮어쓰지 않고 독립 `search_engine` 툴만 제공한다.
+
 ## 툴
 
-| 툴                 | 하는 일                                             | 비고                                                        |
-| ------------------ | --------------------------------------------------- | ----------------------------------------------------------- |
-| `search_engine`    | SERP API로 웹 검색, 파싱된 결과 반환                | 봇 탐지 우회, 내장 웹검색보다 안정적                        |
-| `scrape`           | 단일 URL을 깨끗한 마크다운/html로                   | Web Unlocker — JS·CAPTCHA·봇탐지 처리                       |
-| `scrape_batch`     | 여러 URL을 한 번에(최대 20)                         | URL별 결과/에러, 개별 실패 격리                             |
-| `web_data`         | 지원 플랫폼의 구조화 JSON                           | Web Scraper API — raw HTML 아닌 정제 필드, 최대 1분 소요    |
-| `proxy_scrape`     | residential 프록시 경유 fetch(국가 선택)            | `BRIGHTDATA_PROXY_AUTH` 필요                                |
-| `session_stats`    | 이 세션의 툴 호출 수 보고                           | —                                                           |
-| `browser_navigate` | Scraping Browser로 URL 열기(지속 CDP 세션)          | `[browser]` extra + `BRIGHTDATA_BROWSER_AUTH` 필요          |
-| `browser_snapshot` | 현재 페이지의 ARIA 스냅샷(접근성 트리)              | 페이지 구조·내용 읽기용                                     |
-| `browser_act`      | 현재 페이지에 `click`/`type`/`scroll`/`wait`        | `click`/`type`은 CSS·text 셀렉터로(`#submit`, `text=Login`) |
-| `browser_get`      | 현재 페이지 읽기: `html`/`text`/base64 `screenshot` | —                                                           |
+| 툴                            | 하는 일                                           | 비고                                                        |
+| ----------------------------- | ------------------------------------------------- | ----------------------------------------------------------- |
+| `search_engine`               | SERP API로 웹 검색, 파싱된 결과 반환              | 봇 탐지 우회, 내장 웹검색보다 안정적                        |
+| `scrape`                      | 단일 URL을 깨끗한 마크다운/html로                 | Web Unlocker — JS·CAPTCHA·봇탐지 처리                       |
+| `scrape_batch`                | 여러 URL을 한 번에(최대 20)                       | URL별 결과/에러, 개별 실패 격리                             |
+| `web_data`                    | 지원 플랫폼의 구조화 JSON                         | Web Scraper API — raw HTML 아닌 정제 필드, 최대 1분 소요    |
+| `proxy_scrape`                | residential 프록시 경유 fetch(국가 선택)          | `BRIGHTDATA_PROXY_AUTH` 필요                                |
+| `session_stats`               | 이 세션의 툴 호출 수 보고                         | —                                                           |
+| `brightdata_browser_navigate` | Scraping Browser로 URL 열기(지속 CDP 세션)        | `[browser]` extra + `BRIGHTDATA_BROWSER_AUTH` 필요          |
+| `brightdata_browser_snapshot` | 현재 페이지의 ARIA 스냅샷(접근성 트리)            | 페이지 구조·내용 읽기용                                     |
+| `brightdata_browser_act`      | 현재 페이지에 `click`/`type`/`scroll`/`wait`      | `click`/`type`은 CSS·text 셀렉터로(`#submit`, `text=Login`) |
+| `brightdata_browser_get`      | 현재 페이지 읽기: `html`/`text`/base64 screenshot | —                                                           |
 
-Scraping Browser 세션은 첫 `browser_navigate`에서 lazy 생성되고 세션 종료 시 자동으로 닫힌다.
+Scraping Browser 세션은 첫 `brightdata_browser_navigate`에서 lazy 생성되고 세션 종료 시 자동으로 닫힌다. `brightdata_` 접두사는 Hermes 내장 브라우저 툴과의 충돌을 막는다.
 
 ### 지원 `web_data` 플랫폼
 
@@ -108,9 +113,9 @@ Scraping Browser 세션은 첫 `browser_navigate`에서 lazy 생성되고 세션
 
 **필수**
 
-| 변수                   | 비고                                                                                     |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| `BRIGHTDATA_API_TOKEN` | Bright Data API 토큰(Account Settings → API keys). `BRIGHTDATA_API_KEY`도 별칭으로 허용. |
+| 변수                   | 비고                                                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BRIGHTDATA_API_TOKEN` | Bright Data API 토큰(Account Settings → API keys). `BRIGHTDATA_API_KEY` 또는 `BRIGHTDATA_TEAM_TOKEN`처럼 하나만 존재하는 시크릿 매니저 라벨도 별칭으로 허용. |
 
 **선택**
 

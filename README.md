@@ -24,7 +24,7 @@ Bright Data handles the hard parts of web data collection — proxy rotation, he
 
 - Python 3.10+
 - A Bright Data account and API token (`BRIGHTDATA_API_TOKEN`)
-- For `browser_*` tools: the `[browser]` extra (Playwright) and `BRIGHTDATA_BROWSER_AUTH`. The core five tools run on `requests` alone.
+- For `brightdata_browser_*` tools: the `[browser]` extra (Playwright) and `BRIGHTDATA_BROWSER_AUTH`. The core five tools run on `requests` alone.
 
 ## Install
 
@@ -54,14 +54,91 @@ hermes plugins enable brightdata
 
 Answer `no` to any tool-override prompt. Restart the gateway (`hermes gateway restart`) or `/reset` a session if the tools do not appear immediately.
 
-## Quick start
+## Set up Bright Data in Hermes
+
+Install the package in the same Python environment that runs `hermes`, then
+enable the opt-in plugin:
 
 ```bash
-export BRIGHTDATA_API_TOKEN="your-api-token-here"
+python -m pip install hermes-brightdata
 hermes plugins enable brightdata
 ```
 
-The agent can now call the tools. Example arguments:
+For browser automation, install the extra instead:
+
+```bash
+python -m pip install "hermes-brightdata[browser]"
+```
+
+The plugin adds standalone Bright Data tools on every supported Hermes release.
+Hermes versions with the Web Search Provider API also register `brightdata` as a
+native `web_search` backend; it never replaces Hermes' built-in tools.
+
+### Configure through the setup wizard
+
+This is the easiest way to persist the token in Hermes' environment file and
+select Bright Data from the provider picker.
+
+```bash
+hermes setup tools
+```
+
+In the interactive UI, choose:
+
+1. **Reconfigure an existing tool's provider or API key**
+2. **Web Search & Scraping**
+3. **Bright Data [paid]**
+4. Paste the Bright Data API token when prompted.
+
+The wizard configures Bright Data as the shared web backend. Bright Data's
+provider implementation is search-only, so use the per-capability
+`web.search_backend` override in the next section when another provider should
+handle native extraction.
+
+### Configure manually
+
+For a one-off terminal session, export the token and select the native search
+backend explicitly:
+
+```bash
+export BRIGHTDATA_API_TOKEN="your-api-token-here"
+hermes config set web.search_backend brightdata
+hermes config check
+```
+
+To persist the token, run `hermes config env-path`, open the reported file, and
+add `BRIGHTDATA_API_TOKEN=...` there. Keep tokens out of shell history, source
+control, prompts, and README examples. The plugin also accepts
+`BRIGHTDATA_API_KEY`, or one unambiguous secret-manager label such as
+`BRIGHTDATA_TEAM_TOKEN`.
+
+`web.search_backend` is the recommended setting for this plugin. It takes
+precedence over the shared `web.backend` value for native search, while leaving
+the extraction backend under your existing configuration. Check the resulting
+configuration at any time with `hermes config show`.
+
+### Use it in a Hermes session
+
+Start a fresh session after enabling the plugin or changing its backend:
+
+```bash
+hermes
+```
+
+Ask Hermes to use the native search capability, for example:
+
+> Use native `web_search` to find the official OpenAI API documentation. Return the first three results with titles and URLs.
+
+For script-friendly verification, run:
+
+```bash
+hermes -z "Use native web_search exactly once to search for OpenAI API documentation. Return the first result title and URL."
+```
+
+In an already-running interactive session, run `/reset` after the configuration
+change. For gateway-based sessions, run `hermes gateway restart`. The standalone
+tools remain available for Bright Data-specific work; ask Hermes to use one by
+name when needed:
 
 - `scrape` → `{"url": "https://example.com"}`
 - `search_engine` → `{"query": "bright data", "engine": "google"}`
@@ -72,20 +149,20 @@ Every tool returns a JSON string; failures come back as `{"error": ..., "hint": 
 
 ## Tools
 
-| Tool               | What it does                                                   | Notes                                                                       |
-| ------------------ | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `search_engine`    | Web search via Bright Data SERP API, returning parsed results  | Bypasses bot detection; more reliable than a built-in web search            |
-| `scrape`           | Fetch a single URL as clean markdown or html                   | Web Unlocker — handles JS, CAPTCHAs, bot detection                          |
-| `scrape_batch`     | Scrape multiple URLs in one call (max 20)                      | Per-URL content or error; individual failures are isolated                  |
-| `web_data`         | Structured JSON from a supported platform                      | Web Scraper API — clean fields, not raw HTML; may take up to a minute       |
-| `proxy_scrape`     | Fetch a URL through a residential proxy, optionally by country | Requires `BRIGHTDATA_PROXY_AUTH`                                            |
-| `session_stats`    | Report Bright Data tool call counts for this session           | —                                                                           |
-| `browser_navigate` | Open a URL in a Scraping Browser (persistent CDP session)      | Requires the `[browser]` extra and `BRIGHTDATA_BROWSER_AUTH`                |
-| `browser_snapshot` | ARIA snapshot (accessibility tree) of the current page         | For reading page structure and content                                      |
-| `browser_act`      | `click`, `type`, `scroll`, or `wait` on the current page       | Target `click`/`type` with a CSS or text selector (`#submit`, `text=Login`) |
-| `browser_get`      | Read the current page: `html`, `text`, or base64 `screenshot`  | —                                                                           |
+| Tool                          | What it does                                                   | Notes                                                                       |
+| ----------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `search_engine`               | Web search via Bright Data SERP API, returning parsed results  | Bypasses bot detection; more reliable than a built-in web search            |
+| `scrape`                      | Fetch a single URL as clean markdown or html                   | Web Unlocker — handles JS, CAPTCHAs, bot detection                          |
+| `scrape_batch`                | Scrape multiple URLs in one call (max 20)                      | Per-URL content or error; individual failures are isolated                  |
+| `web_data`                    | Structured JSON from a supported platform                      | Web Scraper API — clean fields, not raw HTML; may take up to a minute       |
+| `proxy_scrape`                | Fetch a URL through a residential proxy, optionally by country | Requires `BRIGHTDATA_PROXY_AUTH`                                            |
+| `session_stats`               | Report Bright Data tool call counts for this session           | —                                                                           |
+| `brightdata_browser_navigate` | Open a URL in a Scraping Browser (persistent CDP session)      | Requires the `[browser]` extra and `BRIGHTDATA_BROWSER_AUTH`                |
+| `brightdata_browser_snapshot` | ARIA snapshot (accessibility tree) of the current page         | For reading page structure and content                                      |
+| `brightdata_browser_act`      | `click`, `type`, `scroll`, or `wait` on the current page       | Target `click`/`type` with a CSS or text selector (`#submit`, `text=Login`) |
+| `brightdata_browser_get`      | Read the current page: `html`, `text`, or base64 screenshot    | —                                                                           |
 
-The Scraping Browser session is created lazily on the first `browser_navigate` and closed automatically on session end.
+The Scraping Browser session is created lazily on the first `brightdata_browser_navigate` and closed automatically on session end. The `brightdata_` prefix prevents collisions with Hermes' built-in browser tools.
 
 ### Supported `web_data` platforms
 
@@ -108,9 +185,9 @@ Credentials are read from environment variables.
 
 **Required**
 
-| Variable               | Notes                                                                                              |
-| ---------------------- | -------------------------------------------------------------------------------------------------- |
-| `BRIGHTDATA_API_TOKEN` | Bright Data API token (Account Settings → API keys). `BRIGHTDATA_API_KEY` is accepted as an alias. |
+| Variable               | Notes                                                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BRIGHTDATA_API_TOKEN` | Bright Data API token (Account Settings → API keys). `BRIGHTDATA_API_KEY`, or one unambiguous secret-manager label such as `BRIGHTDATA_TEAM_TOKEN`, is accepted as an alias. |
 
 **Optional**
 

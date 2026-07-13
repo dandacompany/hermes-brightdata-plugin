@@ -1,6 +1,7 @@
 import json
+import pytest
 import responses
-from brightdata_plugin.api import BrightDataClient
+from brightdata_plugin.api import BrightDataClient, BrightDataError
 from brightdata_plugin.config import Config
 
 CFG = Config(token="tok_123", unlocker_zone="web_unlocker1",
@@ -85,3 +86,29 @@ def test_collect_dataset_failed_status():
                                     sleep=lambda s: None)
     assert result["status"] == "failed"
     assert result["snapshot_id"] == "s_abc"
+
+
+@responses.activate
+def test_trigger_invalid_json_is_normalized_to_brightdata_error():
+    responses.add(responses.POST, f"{BASE}/trigger", body="not json", status=200)
+    with pytest.raises(BrightDataError) as exc:
+        BrightDataClient(CFG).trigger_dataset("gd_x", ["https://example.com/p/1"])
+    assert exc.value.status == 0
+    assert "json" in exc.value.hint.lower()
+
+
+@responses.activate
+def test_trigger_missing_snapshot_id_is_normalized_to_brightdata_error():
+    responses.add(responses.POST, f"{BASE}/trigger", json={}, status=200)
+    with pytest.raises(BrightDataError) as exc:
+        BrightDataClient(CFG).trigger_dataset("gd_x", ["https://example.com/p/1"])
+    assert "snapshot_id" in str(exc.value)
+    assert "incomplete" in exc.value.hint.lower()
+
+
+@responses.activate
+def test_progress_missing_status_is_normalized_to_brightdata_error():
+    responses.add(responses.GET, f"{BASE}/progress/s_abc", json={}, status=200)
+    with pytest.raises(BrightDataError) as exc:
+        BrightDataClient(CFG).poll_snapshot("s_abc")
+    assert "status" in str(exc.value)

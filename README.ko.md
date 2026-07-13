@@ -28,16 +28,27 @@ Bright Data가 웹 데이터 수집의 어려운 부분(프록시 로테이션, 
 
 ## 설치
 
-### Option A — pip (권장)
+### Option A — Hermes Git 설치(권장)
 
-PyPI로 배포되며 entry point로 Hermes에 등록된다:
+Hermes 플러그인 디렉터리에 직접 설치한다. Hermes가 사용하는 Python 환경을
+따로 찾을 필요가 없다.
 
 ```bash
-pip install hermes-brightdata            # 코어 툴
-pip install "hermes-brightdata[browser]" # + 브라우저 자동화(Playwright)
+hermes plugins install dandacompany/hermes-brightdata-plugin --enable
 ```
 
-### Option B — 소스에서
+### Option B — PyPI
+
+Hermes를 실행하는 동일 Python 환경에 설치한 뒤 활성화한다.
+
+```bash
+python -m pip install hermes-brightdata
+hermes plugins enable brightdata --no-allow-tool-override
+```
+
+브라우저 자동화가 필요하면 `hermes-brightdata[browser]`를 설치한다.
+
+### Option C — 소스에서
 
 ```bash
 git clone https://github.com/dandacompany/hermes-brightdata-plugin ~/src/hermes-brightdata-plugin
@@ -57,8 +68,7 @@ tool-override 프롬프트는 `no`로. 툴이 바로 안 보이면 게이트웨�
 ## 빠른 시작
 
 ```bash
-export BRIGHTDATA_API_TOKEN="발급받은-API-토큰"
-hermes plugins enable brightdata
+hermes plugins install dandacompany/hermes-brightdata-plugin --enable
 ```
 
 이제 에이전트가 툴을 호출할 수 있다. 인자 예시:

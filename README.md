@@ -28,16 +28,28 @@ Bright Data handles the hard parts of web data collection — proxy rotation, he
 
 ## Install
 
-### Option A — pip (recommended)
+### Option A — Hermes Git install (recommended)
 
-The plugin ships on PyPI and registers with Hermes via an entry point:
+Install directly into Hermes' plugin directory. This avoids having to locate
+the Python environment used by your Hermes installation:
 
 ```bash
-pip install hermes-brightdata            # core tools
-pip install "hermes-brightdata[browser]" # + browser automation (Playwright)
+hermes plugins install dandacompany/hermes-brightdata-plugin --enable
 ```
 
-### Option B — from source
+### Option B — PyPI
+
+Install the package in the same Python environment that runs `hermes`, then
+enable it:
+
+```bash
+python -m pip install hermes-brightdata
+hermes plugins enable brightdata --no-allow-tool-override
+```
+
+For browser automation, install `hermes-brightdata[browser]` instead.
+
+### Option C — from source
 
 ```bash
 git clone https://github.com/dandacompany/hermes-brightdata-plugin ~/src/hermes-brightdata-plugin
@@ -56,18 +68,10 @@ Answer `no` to any tool-override prompt. Restart the gateway (`hermes gateway re
 
 ## Set up Bright Data in Hermes
 
-Install the package in the same Python environment that runs `hermes`, then
-enable the opt-in plugin:
+Install the plugin directly through Hermes, then enable it:
 
 ```bash
-python -m pip install hermes-brightdata
-hermes plugins enable brightdata
-```
-
-For browser automation, install the extra instead:
-
-```bash
-python -m pip install "hermes-brightdata[browser]"
+hermes plugins install dandacompany/hermes-brightdata-plugin --enable
 ```
 
 The plugin adds standalone Bright Data tools on every supported Hermes release.
